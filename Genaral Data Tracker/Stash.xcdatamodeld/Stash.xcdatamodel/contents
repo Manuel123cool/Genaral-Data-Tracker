@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="18154" systemVersion="20D80" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="EntityStore" representedClassName="EntityStore" syncable="YES">
+        <attribute name="boolState" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="indexRelatedTemplate" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromData" customClassName="[Int]"/>
+        <attribute name="stringState" attributeType="String"/>
+    </entity>
+    <entity name="TemplateStore" representedClassName="TemplateStore" syncable="YES">
+        <attribute name="biggerIsBetter" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="data" attributeType="String"/>
+        <attribute name="dataEntrieTyp" attributeType="String" valueTransformerName="" customClassName="DataEntrieTyp"/>
+        <attribute name="goal" attributeType="Double" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="header" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="indexes" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromData" customClassName="[Int]"/>
+        <attribute name="options" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromData" customClassName="[String]"/>
+        <attribute name="userSet" attributeType="Boolean" usesScalarValueType="YES"/>
+    </entity>
+    <elements>
+        <element name="EntityStore" positionX="-63" positionY="-9" width="128" height="104"/>
+        <element name="TemplateStore" positionX="-54" positionY="0" width="128" height="164"/>
+    </elements>
+</model>
