@@ -8,69 +8,68 @@
 import SwiftUI
 
 struct ShowHistory: View {
-    @Binding var dataEntities: [OneDataEntitiy]
+     @Binding var dataEntities: [OneDataEntitiy]
 
-    let indexes: [Int]
-    let header: String
-    
-    @Binding var templateGroups: [[OneEntrieData]]
+     let indexes: [Int]
+     let header: String
 
-    @Binding var isShowing: Bool
+     @Binding var templateGroups: [[OneEntrieData]]
 
-    @State private var selected = 0
-    
-    @Binding var isShowingGroup: Bool
-    
-    let fromGroup: Bool
-    var body: some View {
-        VStack {
-            AddAtDate(indexes: indexes, dataEntities: $dataEntities,
-                      templateGroups: $templateGroups, isShowing: $isShowing)
-            Divider()
-            if linkLength > 1 {
-                LinkList(length: linkLength, selected: $selected)
-            }
-            ShowHistoryList(dataEntities: $dataEntities, indexes: indexes,
-                            header: header, templateGroups: $templateGroups,
-                            isShowing: $isShowing,
-                            usedDataEntities: ShowHistory.reUsedEntities(dataEntities, indexes).0[selected],
-                            selected: $selected,
-                            isShowingGroup: $isShowingGroup)
-        }
-        .onDisappear(perform: delZeroGroups)
-    }
-    
-    var linkLength: Int {
-        ShowHistory.reUsedEntities(dataEntities, indexes).length
-    }
-    
-    func delZeroGroups() {
-        if !fromGroup {
-            ShowHistoryList.delZeroGroups(&templateGroups, &dataEntities)
-        }
-    }
-    
-    static func reUsedEntities(_ dataEntities: [OneDataEntitiy], _ indexes: [Int]) -> ([[OneDataEntitiy]], length: Int) {
-        let sortedEntities = sortDates(usedDataEntities: dataEntities)
-        
-        var usedDataEntities: [OneDataEntitiy] = []
-        for entity in sortedEntities {
-            if entity.indexRelatedTemplate == indexes {
-                usedDataEntities.append(entity)
-            }
-        }
-        var inGroups: [[OneDataEntitiy]] = [[]]
-        
-        for (index, usedDataEntitie) in usedDataEntities.enumerated() {
-            if index > inGroups.count * 15 - 1 {
-                inGroups.append([])
-            }
-            inGroups[inGroups.count - 1].append(usedDataEntitie)
-        }
-        
-        return (inGroups, length: inGroups.count)
-    }
-}
+     @Binding var isShowing: Bool
+
+     @State private var selected = 0
+
+     @Binding var isShowingGroup: Bool
+
+     let fromGroup: Bool
+     var body: some View {
+         VStack {
+             AddAtDate(indexes: indexes, dataEntities: $dataEntities,
+                       templateGroups: $templateGroups, isShowing: $isShowing)
+             Divider()
+             if linkLength > 1 {
+                 LinkList(length: linkLength, selected: $selected)
+             }
+             ShowHistoryList(dataEntities: $dataEntities, indexes: indexes,
+                             header: header, templateGroups: $templateGroups,
+                             isShowing: $isShowing, usedDataEntities: reUsedEntities(selected).0,
+                             selected: $selected,
+                             isShowingGroup: $isShowingGroup)
+         }
+         .onDisappear(perform: delZeroGroups)
+     }
+
+     var linkLength: Int {
+         reUsedEntities(0).length
+     }
+
+     func delZeroGroups() {
+         if !fromGroup {
+             ShowHistoryList.delZeroGroups(&templateGroups, &dataEntities)
+         }
+     }
+
+     func reUsedEntities(_ selected: Int) -> ([OneDataEntitiy], length: Int) {
+         let sortedEntities = sortDates(usedDataEntities: self.dataEntities)
+
+         var usedDataEntities: [OneDataEntitiy] = []
+         for entity in sortedEntities {
+             if entity.indexRelatedTemplate == indexes {
+                 usedDataEntities.append(entity)
+             }
+         }
+         var inGroups: [[OneDataEntitiy]] = [[]]
+
+         for (index, usedDataEntitie) in usedDataEntities.enumerated() {
+             if index > inGroups.count * 15 - 1 {
+                 inGroups.append([])
+             }
+             inGroups[inGroups.count - 1].append(usedDataEntitie)
+         }
+
+         return (inGroups[selected], length: inGroups.count)
+     }
+ }
 
 struct ShowHistoryButton: View {
     @State var isShowing = false
@@ -236,23 +235,15 @@ struct ShowHistoryList: View {
     
     func deleteDataEntity(indexSet: IndexSet) {
         for index in indexSet {
-            let fromReUsed = ShowHistory.reUsedEntities(dataEntities, indexes).0
+            let id = usedDataEntities[index].id
+            PersistenceController.shared.deleteEntity(id)
             
-            var startCount = false
-            var overallIndex = 0
-            for (index1, group) in fromReUsed.enumerated() {
-                for (index2, _) in group.enumerated() {
-                    if startCount {
-                        overallIndex += 1
-                    }
-                    if index1 == selected && index2 == index {
-                        startCount = true
-                    }
+            for (index1, entity) in dataEntities.enumerated() {
+                if entity.id == id {
+                    dataEntities.remove(at: index1)
+                    break
                 }
             }
-            print(overallIndex)
-            PersistenceController.shared.deleteEntity(dataEntities[overallIndex].id)
-            dataEntities.remove(at: overallIndex)
         }
         
         if usedDataEntities.count == 1 && selected > 0 {
