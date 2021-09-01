@@ -32,7 +32,8 @@ struct ShowHistory: View {
             }
             ShowHistoryList(dataEntities: $dataEntities, indexes: indexes,
                             header: header, templateGroups: $templateGroups,
-                            isShowing: $isShowing, usedDataEntities: reUsedEntities(selected).0,
+                            isShowing: $isShowing,
+                            usedDataEntities: ShowHistory.reUsedEntities(dataEntities, indexes).0[selected],
                             selected: $selected,
                             isShowingGroup: $isShowingGroup)
         }
@@ -40,7 +41,7 @@ struct ShowHistory: View {
     }
     
     var linkLength: Int {
-        reUsedEntities(0).length
+        ShowHistory.reUsedEntities(dataEntities, indexes).length
     }
     
     func delZeroGroups() {
@@ -49,8 +50,8 @@ struct ShowHistory: View {
         }
     }
     
-    func reUsedEntities(_ selected: Int) -> ([OneDataEntitiy], length: Int) {
-        let sortedEntities = sortDates(usedDataEntities: self.dataEntities)
+    static func reUsedEntities(_ dataEntities: [OneDataEntitiy], _ indexes: [Int]) -> ([[OneDataEntitiy]], length: Int) {
+        let sortedEntities = sortDates(usedDataEntities: dataEntities)
         
         var usedDataEntities: [OneDataEntitiy] = []
         for entity in sortedEntities {
@@ -67,7 +68,7 @@ struct ShowHistory: View {
             inGroups[inGroups.count - 1].append(usedDataEntitie)
         }
         
-        return (inGroups[selected], length: inGroups.count)
+        return (inGroups, length: inGroups.count)
     }
 }
 
@@ -132,7 +133,7 @@ struct LinkList: View {
                         .onTapGesture {
                             selected = index
                         }
-                        .frame(minWidth: PercSize.width(6))
+                        .frame(minWidth: PercSize.width(8), minHeight: PercSize.heigth(4))
                         .background(RoundedRectangle(cornerRadius: 10).foregroundColor(.green))
                 }
             }
@@ -234,27 +235,28 @@ struct ShowHistoryList: View {
     }
     
     func deleteDataEntity(indexSet: IndexSet) {
-        if usedDataEntities.count == 1 && selected > 0 {
-            selected -= 1
-        }
-        var tempDateEntities = usedDataEntities
-        tempDateEntities.remove(atOffsets: indexSet)
-        for (index, dataEntitie) in dataEntities.enumerated() {
-            if dataEntitie.indexRelatedTemplate == indexes {
-                var doesntExist = true
-                for tempDateEntitie in tempDateEntities {
-                    if tempDateEntitie.id == dataEntitie.id {
-                        doesntExist = false
-                        break
+        for index in indexSet {
+            let fromReUsed = ShowHistory.reUsedEntities(dataEntities, indexes).0
+            
+            var startCount = false
+            var overallIndex = 0
+            for (index1, group) in fromReUsed.enumerated() {
+                for (index2, _) in group.enumerated() {
+                    if startCount {
+                        overallIndex += 1
+                    }
+                    if index1 == selected && index2 == index {
+                        startCount = true
                     }
                 }
-                
-                if doesntExist {
-                    PersistenceController.shared.deleteEntity(dataEntities[index].id)
-                    dataEntities.remove(at: index)
-                    return
-                }
             }
+            print(overallIndex)
+            PersistenceController.shared.deleteEntity(dataEntities[overallIndex].id)
+            dataEntities.remove(at: overallIndex)
+        }
+        
+        if usedDataEntities.count == 1 && selected > 0 {
+            selected -= 1
         }
     }
 }
